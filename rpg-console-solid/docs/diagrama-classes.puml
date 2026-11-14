@@ -1,0 +1,171 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+title Diagrama de Classes UML - Crônicas do Abismo (RPG POO & SOLID)
+
+package "br.com.rpg.interfaces" {
+    interface Atacante {
+        +atacar(alvo: EntidadeCombate, rng: GeradorAleatorio): ResultadoAtaque
+    }
+    interface Esquivavel {
+        +tentarEsquivar(rng: GeradorAleatorio): boolean
+        +getChanceEsquivaTotal(): double
+    }
+    interface HabilidadeEspecial {
+        +getNomeHabilidade(): String
+        +usarHabilidadeEspecial(alvo: EntidadeCombate, rng: GeradorAleatorio): ResultadoAtaque
+    }
+    interface ItemUsavel {
+        +usar(alvo: Personagem): String
+    }
+    interface Equipavel {
+        +getSlot(): SlotEquipamento
+        +aoEquipar(alvo: Personagem): void
+        +aoDesequipar(alvo: Personagem): void
+    }
+    interface EventoAleatorio {
+        +getTitulo(): String
+        +getPesoBase(): int
+        +executar(jogador: Personagem, rng: GeradorAleatorio): ResultadoEvento
+    }
+}
+
+package "br.com.rpg.model" {
+    class Atributos {
+        -vidaMaxima: int
+        -vidaAtual: int
+        -ataque: int
+        -defesa: int
+        -sorte: int
+        -esquivaBase: double
+        -chanceCriticoBase: double
+        -nivel: int
+        -experiencia: int
+        -ouro: int
+        +receberDanoBruto(dano: int, defesa: int): int
+        +curar(qtd: int): int
+        +ganharExperiencia(xp: int): boolean
+    }
+
+    abstract class EntidadeCombate {
+        #nome: String
+        #atributos: Atributos
+        #bonusEsquivaTemporario: double
+        +getAtaqueTotal(): int
+        +getDefesaTotal(): int
+        +getSorteTotal(): int
+        +getChanceEsquivaTotal(): double
+        +getChanceCriticoTotal(): double
+    }
+
+    abstract class Personagem {
+        -inventario: Inventario
+        +descansar(): int
+    }
+
+    class Guerreiro
+    class Mago
+    class Arqueiro
+
+    abstract class Inimigo {
+        -recompensaXp: int
+        -recompensaOuro: int
+        -chefe: boolean
+    }
+    class InimigoComum
+    class Chefe {
+        -emFuria: boolean
+    }
+}
+
+package "br.com.rpg.item" {
+    abstract class Item {
+        -nome: String
+        -descricao: String
+        -raridade: Raridade
+        -valorOuro: int
+    }
+    class PocaoCura
+    class ElixirSorte
+    class Equipamento {
+        -slot: SlotEquipamento
+        -bonusAtaque: int
+        -bonusDefesa: int
+        -bonusSorte: int
+        -bonusEsquiva: double
+    }
+    class Inventario {
+        -itens: List<Item>
+        -equipados: Map<SlotEquipamento, Equipamento>
+        +adicionarItem(item: Item): void
+        +equiparItem(eq: Equipamento, p: Personagem): String
+    }
+}
+
+package "br.com.rpg.rng" {
+    interface GeradorAleatorio
+    class GeradorAleatorioPadrao
+}
+
+package "br.com.rpg.event" {
+    class GerenciadorEventos
+    class EventoBauMisterioso
+    class EventoSantuarioAntigo
+    class EventoEmboscada
+    class EventoFonteMistica
+}
+
+package "br.com.rpg.service" {
+    class MotorCombate
+    class GeradorLoot
+    class PersistenciaService
+    class JogoService
+}
+
+package "br.com.rpg.ui" {
+    interface InterfaceUsuario
+    class ConsoleUI
+}
+
+EntidadeCombate ..|> Atacante
+EntidadeCombate ..|> Esquivavel
+EntidadeCombate ..|> HabilidadeEspecial
+EntidadeCombate *-- Atributos
+
+Personagem --|> EntidadeCombate
+Personagem *-- Inventario
+Guerreiro --|> Personagem
+Mago --|> Personagem
+Arqueiro --|> Personagem
+
+Inimigo --|> EntidadeCombate
+InimigoComum --|> Inimigo
+Chefe --|> Inimigo
+
+PocaoCura --|> Item
+PocaoCura ..|> ItemUsavel
+ElixirSorte --|> Item
+ElixirSorte ..|> ItemUsavel
+Equipamento --|> Item
+Equipamento ..|> Equipavel
+Inventario o-- Item
+
+GeradorAleatorioPadrao ..|> GeradorAleatorio
+ConsoleUI ..|> InterfaceUsuario
+
+EventoBauMisterioso ..|> EventoAleatorio
+EventoSantuarioAntigo ..|> EventoAleatorio
+EventoEmboscada ..|> EventoAleatorio
+EventoFonteMistica ..|> EventoAleatorio
+GerenciadorEventos o-- EventoAleatorio
+GerenciadorEventos --> GeradorAleatorio
+
+MotorCombate --> GeradorAleatorio
+MotorCombate --> InterfaceUsuario
+GeradorLoot --> GeradorAleatorio
+JogoService --> MotorCombate
+JogoService --> GeradorLoot
+JogoService --> GerenciadorEventos
+JogoService --> PersistenciaService
+JogoService --> InterfaceUsuario
+@enduml
